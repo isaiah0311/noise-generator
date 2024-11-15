@@ -15,7 +15,7 @@ mkdir -p bin
 
 source_files=$(find . -type f -name "*.c")
 
-flags="-Wall -Werror -DNDEBUG -Isrc -o bin/noise_generator.exe"
+flags="-Wall -Werror -DNDEBUG -Isrc -lm -o bin/noise_generator.exe"
 
 gcc $source_files $flags
 
