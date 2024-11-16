@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <bitmap.h>
+
 /**
  * Swaps two integers.
  * 
@@ -128,8 +130,25 @@ double perlin_noise(double x, double y, double z) {
 int main() {
     srand((unsigned) time(NULL));
 
-    const unsigned width = 20;
-    const unsigned height = 20;
+    const unsigned width = 400;
+    const unsigned height = 400;
+
+    struct bitmap bitmap = { 0 };
+
+    bitmap.file_header.signature[0] = 'B';
+    bitmap.file_header.signature[1] = 'M';
+    bitmap.file_header.file_size = 54 + (width * height * 3);
+    bitmap.file_header.offset = 54;
+
+    bitmap.dib_header.header_size = 40;
+    bitmap.dib_header.width = width;
+    bitmap.dib_header.height = height;
+    bitmap.dib_header.color_planes = 1;
+    bitmap.dib_header.bits_per_pixel = 24;
+    bitmap.dib_header.horizontal_resolution = 3780;
+    bitmap.dib_header.vertical_resolution = 3780;
+
+    bitmap.pixels = malloc(width * height * 3);
     
     for (unsigned y = 0; y < height; ++y) {
         for (unsigned x = 0; x < width; ++x) {
@@ -137,19 +156,44 @@ int main() {
             double noise_y = ((double) y) / ((double) height);
             double noise_value = perlin_noise(noise_x, noise_y, 0.0);
 
-            if (noise_value >= 0.0) {
-                printf(" ");
-            }
+            struct pixel pixel = {
+                (uint8_t) ((noise_value + 1.0) * 128.0),
+                (uint8_t) ((noise_value + 1.0) * 128.0),
+                (uint8_t) ((noise_value + 1.0) * 128.0)
+            };
 
-            printf("%.2lf", noise_value);
-
-            if (x < width - 1) {
-                printf(" ");
-            }
+            bitmap.pixels[x + (y * width)] = pixel;
         }
-
-        printf("\n");
     }
+
+    FILE* bitmap_file = fopen("bin/noise.bmp", "wb");
+    if (!bitmap_file) {
+        printf("[ERROR] Failed to create bitmap.\n");
+        return EXIT_FAILURE;
+    }
+
+    fwrite(bitmap.file_header.signature, 1, 2, bitmap_file);
+    fwrite(&bitmap.file_header.file_size, 4, 1, bitmap_file);
+    fwrite(&bitmap.file_header.reserved1, 2, 1, bitmap_file);
+    fwrite(&bitmap.file_header.reserved1, 2, 1, bitmap_file);
+    fwrite(&bitmap.file_header.offset, 4, 1, bitmap_file);
+
+    fwrite(&bitmap.dib_header.header_size, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.width, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.height, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.color_planes, 2, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.bits_per_pixel, 2, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.compression, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.raw_data_size, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.horizontal_resolution, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.vertical_resolution, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.color_table_entries, 4, 1, bitmap_file);
+    fwrite(&bitmap.dib_header.important_colors, 4, 1, bitmap_file);
+
+    fwrite(bitmap.pixels, 3, width * height, bitmap_file);
+
+    fclose(bitmap_file);
+    free(bitmap.pixels);
     
     return EXIT_SUCCESS;
 }

@@ -26,6 +26,9 @@
         "stdlib.h": "c",
         "random": "c",
         "array": "cpp",
-        "cmath": "c"
+        "cmath": "c",
+        "format": "cpp",
+        "iosfwd": "cpp",
+        "xiosbase": "cpp"
     }
 }
