@@ -81,6 +81,7 @@ double grad(int hash, double x, double y, double z) {
  * \param[in] x Horizontal position.
  * \param[in] y Vertical position.
  * \param[in] z Depth position.
+ * \return Noise value.
  */
 double perlin_noise(double x, double y, double z) {
     int perm[512] = { 0 };
@@ -123,6 +124,34 @@ double perlin_noise(double x, double y, double z) {
 }
 
 /**
+ * Calculates the noise at a given position at several octaves, taking into
+ * account both frequency and amplitude.
+ * 
+ * \param[in] x Horizontal position.
+ * \param[in] y Vertical position.
+ * \param[in] z Depth position.
+ * \param[in] octaves Number of octaves.
+ * \return Noise value.
+ */
+double fractal_brownian_motion(double x, double y, double z, unsigned octaves) {
+    double result = 0.0;
+    double maximum = 0.0;
+    double frequency = 1.0;
+    double amplitude = 1.0;
+
+    for (unsigned i = 0; i < octaves; ++i) {
+        result += perlin_noise(x * frequency, y * frequency, z * frequency) *
+            amplitude;
+        maximum += amplitude;
+
+        frequency *= 2.0;
+        amplitude /= 2.0;
+    }
+
+    return result / maximum;
+}
+
+/**
  * Entry point for the program.
  * 
  * \return Exit code.
@@ -130,8 +159,8 @@ double perlin_noise(double x, double y, double z) {
 int main() {
     srand((unsigned) time(NULL));
 
-    const unsigned width = 400;
-    const unsigned height = 400;
+    const unsigned width = 100;
+    const unsigned height = 100;
 
     struct bitmap bitmap = { 0 };
 
@@ -154,7 +183,8 @@ int main() {
         for (unsigned x = 0; x < width; ++x) {
             double noise_x = ((double) x) / ((double) width);
             double noise_y = ((double) y) / ((double) height);
-            double noise_value = perlin_noise(noise_x, noise_y, 0.0);
+            double noise_value = fractal_brownian_motion(noise_x, noise_y, 0.0,
+                12);
 
             struct pixel pixel = {
                 (uint8_t) ((noise_value + 1.0) * 128.0),
