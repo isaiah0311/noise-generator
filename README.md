@@ -17,8 +17,9 @@ you to have Visual Studio if you are debugging from Windows or GDB if you are
 debugging from Linux.
 
 If you are running the program outside of VSCode, or not using a debugger, you
-can run it from the command line. There are no command line options, simply call
-the executable.
+can run it from the command line.
+
+Example: noise_generator.exe [-o output_file] [-w width] [-h height]
 
 ## Authors
 

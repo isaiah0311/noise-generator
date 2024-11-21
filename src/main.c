@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include <bitmap.h>
@@ -154,13 +155,49 @@ double fractal_brownian_motion(double x, double y, double z, unsigned octaves) {
 /**
  * Entry point for the program.
  * 
+ * \param[in] argc Number of command line arguments.
+ * \param[in] argv Array of command line arguments.
  * \return Exit code.
  */
-int main() {
+int main(int argc, char** argv) {
     srand((unsigned) time(NULL));
 
-    const unsigned width = 100;
-    const unsigned height = 100;
+    char* file_path = "noise.bmp";
+    unsigned width = 100;
+    unsigned height = 100;
+
+    for (int i = 1; i < argc; ++i) {
+        if (!strcmp(argv[i], "-o")) {
+            if (++i < argc) {
+                file_path = argv[i];
+            } else {
+                fprintf(stderr, "[ERROR] Missing file name after -o.\n");
+                return EXIT_FAILURE;
+            }
+        } else if (!strcmp(argv[i], "-w")) {
+            if (++i < argc) {
+                int result = sscanf(argv[i], "%u", &width);
+                if (!result) {
+                    fprintf(stderr, "[ERROR] Invalid width.\n");
+                    return EXIT_FAILURE;
+                }
+            } else {
+                fprintf(stderr, "[ERROR] Missing width -w.\n");
+                return EXIT_FAILURE;
+            }
+        } else if (!strcmp(argv[i], "-h")) {
+            if (++i < argc) {
+                int result = sscanf(argv[i], "%u", &height);
+                if (!result) {
+                    fprintf(stderr, "[ERROR] Invalid height.\n");
+                    return EXIT_FAILURE;
+                }
+            } else {
+                fprintf(stderr, "[ERROR] Missing height -h.\n");
+                return EXIT_FAILURE;
+            }
+        }
+    }
 
     struct bitmap bitmap = { 0 };
 
@@ -196,7 +233,7 @@ int main() {
         }
     }
 
-    FILE* bitmap_file = fopen("bin/noise.bmp", "wb");
+    FILE* bitmap_file = fopen(file_path, "wb");
     if (!bitmap_file) {
         printf("[ERROR] Failed to create bitmap.\n");
         return EXIT_FAILURE;
